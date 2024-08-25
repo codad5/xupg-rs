@@ -1,3 +1,10 @@
 {
-    "test":"his is a test api"
+    "windows":{
+        "php" : {
+            "8.3.10" : {
+                "url" : "https://windows.php.net/downloads/releases/php-8.3.10-Win32-vs16-x64.zip", 
+                "release_date" : "2024-07-30"
+            }
+        }
+    }
 }

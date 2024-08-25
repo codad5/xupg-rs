@@ -6,5 +6,6 @@ use reqwest::Error;
 fn main(){
     let mut app = Fli::init_from_toml();   
     app.command("php", "Cli tool to update and manage version of all the tools in the system");
+    
     app.run();
 }
