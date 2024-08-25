@@ -1,12 +1,10 @@
+use fli::Fli;
 use reqwest::Error;
 
-#[tokio::main]
-async fn main() -> Result<(), Error> {
-    let response = reqwest::get("https://jsonplaceholder.typicode.com/posts/1")
-        .await?
-        .text()
-        .await?;
 
-    println!("Response: {}", response);
-    Ok(())
+//  a one general cli tool to update and manage version of all the tools in the system, like php, mysql, node,js versions in a system even when using node or xampp , laragon etc
+fn main(){
+    let mut app = Fli::init_from_toml();   
+    app.command("php", "Cli tool to update and manage version of all the tools in the system");
+    app.run();
 }
