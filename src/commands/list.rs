@@ -30,7 +30,7 @@ pub fn list_php(x: &Fli) {
                             ]);
                         }
                         let headers = vec!["Version", "Release Date"];
-                        println!("\nAvailable PHP versions for {}:", platform.to_uppercase().bold().blue());
+                        println!("\n{} {}: \n", "Available PHP versions for".red(), platform.to_uppercase().bold().blue());
                         print_table(headers, table_data);
                     }
                 }

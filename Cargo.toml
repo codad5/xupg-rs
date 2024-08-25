@@ -3,6 +3,10 @@ name = "xupg-rs"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "xupg"
+path = "src/main.rs"
+
 [dependencies]
 colored = "2.1.0"
 fli = "0.0.6"
