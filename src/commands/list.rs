@@ -1,7 +1,7 @@
 use std::error::Error;
 use colored::*;
 
-use crate::helpers::{api::fetch_releases, get_supported_platform, print_table};
+use crate::helpers::{api::{fetch_releases, ReleaseInfo}, get_supported_platform, print_table};
 use fli::Fli;
 
 pub fn list_php(x: &Fli) {
@@ -23,7 +23,11 @@ pub fn list_php(x: &Fli) {
                     if php.is_some() {
                         let php = php.unwrap();
                         let mut table_data = Vec::new();
-                        for (version, info) in php.versions.iter() {
+                        let mut versions_with_info: Vec<(&String, &ReleaseInfo)> = php.versions.iter().collect();
+                        versions_with_info.sort_by(|(version_a, _), (version_b, _)| {
+                            version_b.cmp(version_a) // Sort in descending order
+                        });
+                        for (version, info) in versions_with_info {
                             table_data.push(vec![
                                 version.to_string(),
                                 info.release_date.to_string(),
@@ -33,6 +37,7 @@ pub fn list_php(x: &Fli) {
                         println!("\n{} {}: \n", "Available PHP versions for".red(), platform.to_uppercase().bold().blue());
                         print_table(headers, table_data);
                     }
+
                 }
             }
         }
