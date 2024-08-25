@@ -41,6 +41,8 @@ pub fn list_php(x: &Fli) {
                 }
             }
         }
-        false => todo!(),
+        false => {
+            x.print_help("Coming soon...");
+        }
     }
 }
