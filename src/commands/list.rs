@@ -1,4 +1,3 @@
-use std::error::Error;
 use colored::*;
 
 use crate::helpers::{api::{fetch_releases, ReleaseInfo}, get_supported_platform, print_table};

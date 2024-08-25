@@ -1,4 +1,3 @@
-use reqwest::header;
 use colored::*;
 use std::fmt::Display;
 
