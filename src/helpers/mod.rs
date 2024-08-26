@@ -1,10 +1,15 @@
 use colored::*;
-use std::fmt::Display;
+use indicatif::{ProgressBar, ProgressStyle};
+use reqwest::Client;
+use std::io::copy;
+use tokio::task;
+use std::{fmt::Display, fs::File};
 
 pub mod api;
+pub mod file;
 
 //  a function to return the platform type , either windows , linux or mac if non return None
-pub fn get_supported_platform() -> Option<String> {
+pub fn get_platform_os() -> Option<String> {
     let os = std::env::consts::OS;
     match os {
         "windows" => Some("windows".to_owned()),
@@ -52,3 +57,6 @@ where
         println!("{}", row_line);
     }
 }
+
+
+
