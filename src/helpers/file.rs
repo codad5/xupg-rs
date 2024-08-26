@@ -31,23 +31,21 @@ pub fn get_download_path(app_name: &str, file_name: &str) -> PathBuf {
 pub fn download_with_progress(url: &str, dest: &Path, pb: ProgressBar) -> Result<(), Box<dyn std::error::Error>> {
     create_dir_all(dest.parent().unwrap())?;
 
-    let client = reqwest::blocking::Client::new();
-    let mut response = client.get(url).send()?;
+    let mut response = reqwest::blocking::get(url)?;
 
     if !response.status().is_success() {
         return Err(format!("Failed to download file: HTTP {}", response.status()).into());
     }
 
-    let total_size = response
-        .content_length()
-        .ok_or("Failed to get content length")?;
+    let total_size = response.content_length().unwrap_or(0);
+    // let response = response.bytes()?;
 
     let mut file = File::create(dest)?;
+    pb.set_length(total_size);
 
     let mut downloaded: u64 = 0;
-    let mut buffer = [0; 1024];
+    let mut buffer = [0; 8192];
 
-    pb.set_length(total_size);
 
     while let Ok(n) = response.read(&mut buffer) {
         if n == 0 {
