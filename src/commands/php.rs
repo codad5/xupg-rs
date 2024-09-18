@@ -112,6 +112,11 @@ pub fn get_php_version(x: &Fli) {
         let target_path = get_download_path("php", format!("php-{}.{}", version, extension).as_str());
         to_download.push(DownloadInfo::new(download_url, target_path));
     }
+
+    if to_download.is_empty() {
+        println!("❌ No PHP versions to download");
+        return;
+    }
     
     if let Err(e) = download_multiple_files(to_download) {
         println!("❌ failed to download: {}", e);

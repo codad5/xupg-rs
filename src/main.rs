@@ -16,6 +16,11 @@ fn main() {
     let mut get_app = app.command("get", "Get a specific version of a tool");
     setup_get_app(&mut get_app);
 
+    // for default callback print help
+    app.default(|x| {
+        x.print_help("Please provide a valid command");
+    });
+
     app.run();
 }
 
