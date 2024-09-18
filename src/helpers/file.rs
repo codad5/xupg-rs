@@ -1,6 +1,11 @@
-use std::{fs::{create_dir_all, File}, io::{Read, Write}, path::{Path, PathBuf}, thread};
+use std::{fs::{create_dir_all, File}, io::{Read, Write}, path::{Path, PathBuf}, thread, time::Duration};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use reqwest::blocking::Client;
+
+use reqwest::blocking::ClientBuilder;
+
+
 
 #[derive(Clone)]
 pub struct DownloadInfo {
@@ -31,7 +36,22 @@ pub fn get_download_path(app_name: &str, file_name: &str) -> PathBuf {
 pub fn download_with_progress(url: &str, dest: &Path, pb: ProgressBar) -> Result<(), Box<dyn std::error::Error>> {
     create_dir_all(dest.parent().unwrap())?;
 
-    let client = reqwest::blocking::Client::new();
+    let host = reqwest::Url::parse(url)?.host_str().unwrap().to_string();
+
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert(reqwest::header::ACCEPT_ENCODING, reqwest::header::HeaderValue::from_static("gzip, deflate, br"));
+    headers.insert(reqwest::header::ACCEPT, reqwest::header::HeaderValue::from_static("*/*"));
+    headers.insert(reqwest::header::CONNECTION, reqwest::header::HeaderValue::from_static("keep-alive"));
+    headers.insert(reqwest::header::USER_AGENT, reqwest::header::HeaderValue::from_static("PostmanRuntime/7.42.0"));
+    headers.insert(reqwest::header::HOST, reqwest::header::HeaderValue::from_str(&host).unwrap());
+
+    // Create a client with an extended timeout
+    let client = ClientBuilder::new()
+        .timeout(Duration::from_secs(300))  // 5 minutes timeout
+        .connection_verbose(true)
+        .default_headers(headers)
+        .build()?;
+
     let mut response = client.get(url).send()?;
 
     if !response.status().is_success() {
@@ -42,23 +62,29 @@ pub fn download_with_progress(url: &str, dest: &Path, pb: ProgressBar) -> Result
         .content_length()
         .ok_or("Failed to get content length")?;
 
+    //  get headers and print them
+    
     let mut file = File::create(dest)?;
-
     let mut downloaded: u64 = 0;
     let mut buffer = [0; 8192];
 
     pb.set_length(total_size);
-
-    while let Ok(n) = response.read(&mut buffer) {
-        if n == 0 {
-            break;
+    
+    loop {
+        match response.read(&mut buffer) {
+            Ok(0) => break, // End of file
+            Ok(n) => {
+                file.write_all(&buffer[..n])?;
+                downloaded += n as u64;
+                pb.set_position(downloaded);
+            }
+            Err(e) => return Err(Box::new(e)),
         }
-        file.write_all(&buffer[..n])?;
-        downloaded += n as u64;
-        pb.set_position(downloaded);
     }
+    // download size in mb
+    let downloaded = downloaded / 1024 / 1024;
 
-    pb.finish_with_message(format!("Downloaded file of size: {} bytes to {:?}", downloaded, dest.display()));
+    pb.finish_with_message(format!("Downloaded file of size: {:?} Mb to {:?}", downloaded, dest.display()));
     Ok(())
 }
 
