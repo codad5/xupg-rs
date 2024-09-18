@@ -93,15 +93,14 @@ pub fn get_php_version(x: &Fli) {
 
     let php = php.unwrap();
     let mut to_download = Vec::new();
+    // let mut success_table_data = Vec::new();
     for version in versions {
-        println!("Getting PHP version: {}", version);
         let version_info = php.versions.get(&version);
         if version_info.is_none() {
             println!("{} {}", "Version not available".red(), version);
             break;
         }
         let version_info = version_info.unwrap();
-        println!("URL: {}", version_info.url);
 
         let download_url = version_info.url.clone();
         let extension = Path::new(&download_url)
@@ -110,13 +109,19 @@ pub fn get_php_version(x: &Fli) {
             .to_str()
             .unwrap();
         let target_path = get_download_path("php", format!("php-{}.{}", version, extension).as_str());
-        to_download.push(DownloadInfo::new(download_url, target_path));
+        to_download.push(DownloadInfo::new(download_url.clone(), target_path));
+        // success_table_data.push(vec![version.to_string(), download_url]);
     }
 
     if to_download.is_empty() {
         println!("❌ No PHP versions to download");
         return;
     }
+    // Print the table of PHP versions to download
+
+    // let headers = vec!["URL", "Destination"];
+    // println!("\n{}: \n", "PHP versions to download".green());
+    // print_table(headers, success_table_data);
     
     if let Err(e) = download_multiple_files(to_download) {
         println!("❌ failed to download: {}", e);

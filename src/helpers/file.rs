@@ -9,8 +9,8 @@ use reqwest::blocking::ClientBuilder;
 
 #[derive(Clone)]
 pub struct DownloadInfo {
-    url: String,
-    dest: PathBuf,
+    pub url: String,
+    pub dest: PathBuf,
 }
 
 impl DownloadInfo {
@@ -94,6 +94,7 @@ pub fn download_with_progress(url: &str, dest: &Path, pb: ProgressBar) -> Result
 
 pub fn download_multiple_files(files: Vec<DownloadInfo>) -> Result<bool, Box<dyn std::error::Error>> {
     let mut threads = vec![];
+    let mut successful: Vec<DownloadInfo> = vec![];
     let pb = MultiProgress::new();
     let style = ProgressStyle::default_bar()
         .template("[{elapsed_precise}] {bar:40.cyan/blue} {msg}")
