@@ -62,6 +62,10 @@ pub fn download_with_progress(url: &str, dest: &Path, pb: ProgressBar) -> Result
         .content_length()
         .ok_or("Failed to get content length")?;
 
+    if total_size <= 0 {
+        return Err(format!("Error Getting file infu").into());
+    }
+
     //  get headers and print them
     
     let mut file = File::create(dest)?;
