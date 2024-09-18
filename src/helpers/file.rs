@@ -81,9 +81,9 @@ pub fn download_with_progress(url: &str, dest: &Path, pb: ProgressBar) -> Result
             Err(e) => return Err(Box::new(e)),
         }
     }
+    
     // download size in mb
     let downloaded = downloaded / 1024 / 1024;
-
     pb.finish_with_message(format!("Downloaded file of size: {:?} Mb to {:?}", downloaded, dest.display()));
     Ok(())
 }
