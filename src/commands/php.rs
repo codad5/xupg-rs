@@ -1,10 +1,9 @@
-use std::{path::Path, thread};
+use std::path::Path;
 
 use colored::*;
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use crate::helpers::{
-    api::{fetch_releases, ReleaseInfo}, file::{download_multiple_files, download_with_progress, get_download_path, DownloadInfo}, get_platform_os, print_table
+    api::{fetch_releases, ReleaseInfo}, file::{download_multiple_files, get_download_path, DownloadInfo}, get_platform_os, print_table
 };
 use fli::Fli;
 

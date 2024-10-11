@@ -30,7 +30,7 @@ fn setup_list_app(app: &mut Fli) {
         "List version of all avaiable php versions",
         list_php,
     );
-    app.option("-o --online", "Get all online", |x| {});
+    app.option("-o --online", "Get all online", |_x| {});
     app.allow_duplicate_callback(false);
 }
 

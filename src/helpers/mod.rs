@@ -1,9 +1,5 @@
 use colored::*;
-use indicatif::{ProgressBar, ProgressStyle};
-use reqwest::Client;
-use std::io::copy;
-use tokio::task;
-use std::{fmt::Display, fs::File};
+use std::fmt::Display;
 
 pub mod api;
 pub mod file;

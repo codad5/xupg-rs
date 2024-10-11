@@ -1,7 +1,6 @@
 use std::{fs::{create_dir_all, File}, io::{Read, Write}, path::{Path, PathBuf}, thread, time::Duration};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use reqwest::blocking::Client;
 
 use reqwest::blocking::ClientBuilder;
 
@@ -94,7 +93,7 @@ pub fn download_with_progress(url: &str, dest: &Path, pb: ProgressBar) -> Result
 
 pub fn download_multiple_files(files: Vec<DownloadInfo>) -> Result<bool, Box<dyn std::error::Error>> {
     let mut threads = vec![];
-    let mut successful: Vec<DownloadInfo> = vec![];
+    // let mut successful: Vec<DownloadInfo> = vec![];
     let pb = MultiProgress::new();
     let style = ProgressStyle::default_bar()
         .template("[{elapsed_precise}] {bar:40.cyan/blue} {msg}")
