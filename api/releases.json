@@ -1,9 +1,9 @@
 {
     "windows":{
         "php" : {
-            "8.3.11" : {
-                "url" : "https://windows.php.net/downloads/releases/php-8.3.11-Win32-vs16-x64.zip", 
-                "release_date" : "2024-08-27"
+            "8.3.12" : {
+                "url" : "https://windows.php.net/downloads/releases/php-8.3.12-Win32-vs16-x64.zip", 
+                "release_date" : "2024-09-24"
             },
             "8.2.23" : {
                 "url" : "https://windows.php.net/downloads/releases/php-8.2.23-Win32-vs16-x64.zip", 
