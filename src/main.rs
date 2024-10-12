@@ -1,7 +1,7 @@
 mod commands;
 mod helpers;
 
-use commands::{php::{get_php_version, list_php}, xampp::set_xampp_php};
+use commands::{php::{get_php_version, install_php_version, list_php}, xampp::set_xampp_php};
 use fli::Fli;
 
 //  a one general cli tool to update and manage version of all the tools in the system, like php, mysql, node,js versions in a system even when using node or xampp , laragon etc
@@ -75,7 +75,7 @@ fn setup_install_app(app: &mut Fli) {
     app.option(
         "-p --php, <>",
         "Install a specific version of php",
-        |_x| {},
+        install_php_version
     );
     app.option(
         "-pa --path, <>",

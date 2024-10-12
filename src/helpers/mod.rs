@@ -3,6 +3,7 @@ use std::fmt::Display;
 
 pub mod api;
 pub mod file;
+pub mod package;
 
 //  a function to return the platform type , either windows , linux or mac if non return None
 pub fn get_platform_os() -> Option<String> {

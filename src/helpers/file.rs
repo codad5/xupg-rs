@@ -154,3 +154,82 @@ pub fn list_files_in_dir(dir: &Path) -> Vec<PathBuf> {
     }
     files
 }
+
+// unzip file to a location
+pub fn unzip_file(file: &Path, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let file = File::open(file)?;
+    let mut archive = zip::ZipArchive::new(file)?;
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let outpath = dest.join(file.mangled_name());
+
+        if file.name().ends_with('/') {
+            std::fs::create_dir_all(&outpath)?;
+        } else {
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    std::fs::create_dir_all(&p)?;
+                }
+            }
+            let mut outfile = std::fs::File::create(&outpath)?;
+            std::io::copy(&mut file, &mut outfile)?;
+
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                if let Some(mode) = file.unix_mode() {
+                    std::fs::set_permissions(&outpath, std::fs::Permissions::from_mode(mode))?;
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+// unzip with progress
+pub fn unzip_file_with_custom_progress(file: &Path, dest: &Path, pb: ProgressBar) -> Result<(), Box<dyn std::error::Error>> {
+    let file = File::open(file)?;
+    let mut archive = zip::ZipArchive::new(file)?;
+
+    pb.set_length(archive.len() as u64);
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let outpath = dest.join(file.mangled_name());
+
+        if file.name().ends_with('/') {
+            std::fs::create_dir_all(&outpath)?;
+        } else {
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    std::fs::create_dir_all(&p)?;
+                }
+            }
+            let mut outfile = std::fs::File::create(&outpath)?;
+            // copy overriding existing files
+            std::io::copy(&mut file, &mut outfile)?;
+
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                if let Some(mode) = file.unix_mode() {
+                    std::fs::set_permissions(&outpath, std::fs::Permissions::from_mode(mode))?;
+                }
+            }
+        }
+        pb.inc(1);
+    }
+    pb.finish_with_message("Unzipped file");
+    Ok(())
+}
+
+pub fn unzip_file_with_progress(file: &Path, dest: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let pb = indicatif::ProgressBar::new(100);
+    let style = ProgressStyle::default_bar()
+        .template("[{elapsed_precise}] {bar:40.cyan/blue} {msg}")
+        .unwrap()
+        .progress_chars("##-");
+    pb.set_style(style);
+    unzip_file_with_custom_progress(file, dest, pb)
+}
