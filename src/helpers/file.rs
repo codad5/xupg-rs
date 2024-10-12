@@ -26,9 +26,18 @@ impl DownloadInfo {
     }
 }
 
-pub fn get_download_path(app_name: &str, file_name: &str) -> PathBuf {
+
+//get download path dir
+pub fn get_download_dir(app_name: &str) -> PathBuf {
     let mut path = dirs_next::home_dir().expect("Could not determine data directory");
-    path.push(format!(".xupg/module/downloads/{}/{}", app_name, file_name));
+    path.push(format!(".xupg/module/downloads/{}", app_name));
+    path
+}
+
+pub fn get_download_path(app_name: &str, file_name: &str) -> PathBuf {
+    let mut path = get_download_dir(app_name);
+    // path.push(format!(".xupg/module/downloads/{}/{}", app_name, file_name));
+    path.push(file_name);
     path
 }
 
@@ -110,6 +119,10 @@ pub fn download_multiple_files(files: Vec<DownloadInfo>) -> Result<bool, Box<dyn
         threads.push(thread::spawn(move || {
             if let Err(e) = download_info.download_with_progress(pb_clone) {
                 println!("Failed to download {}: {}", download_info.url(), e);
+                // delete the file if download fails
+                if download_info.dest.exists() {
+                    std::fs::remove_file(download_info.dest).unwrap();
+                }
             }
         }));
     }
@@ -118,4 +131,17 @@ pub fn download_multiple_files(files: Vec<DownloadInfo>) -> Result<bool, Box<dyn
         t.join().unwrap();
     }
     Ok(true)
+}
+
+// list files in a directory
+pub fn list_files_in_dir(dir: &Path) -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    if dir.is_dir() {
+        for entry in dir.read_dir().expect("Failed to read directory") {
+            if let Ok(entry) = entry {
+                files.push(entry.path());
+            }
+        }
+    }
+    files
 }
