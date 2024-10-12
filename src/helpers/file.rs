@@ -1,8 +1,9 @@
-use std::{fs::{create_dir_all, File}, io::{Read, Write}, path::{Path, PathBuf}, thread, time::Duration};
+use std::{fs::{create_dir_all, File}, io::{Read, Write}, path::{Path, PathBuf}, sync::{Arc, Mutex}, thread, time::Duration};
 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use reqwest::blocking::ClientBuilder;
+use serde_json::error;
 
 
 
@@ -102,7 +103,7 @@ pub fn download_with_progress(url: &str, dest: &Path, pb: ProgressBar) -> Result
 
 pub fn download_multiple_files(files: Vec<DownloadInfo>) -> Result<bool, Box<dyn std::error::Error>> {
     let mut threads = vec![];
-    // let mut successful: Vec<DownloadInfo> = vec![];
+    let errors =  Arc::new(Mutex::new(Vec::new())); 
     let pb = MultiProgress::new();
     let style = ProgressStyle::default_bar()
         .template("[{elapsed_precise}] {bar:40.cyan/blue} {msg}")
@@ -116,9 +117,11 @@ pub fn download_multiple_files(files: Vec<DownloadInfo>) -> Result<bool, Box<dyn
 
         let download_info = file.clone();
         let pb_clone = pb.clone();
+        let errors = Arc::clone(&errors);
         threads.push(thread::spawn(move || {
             if let Err(e) = download_info.download_with_progress(pb_clone) {
-                println!("Failed to download {}: {}", download_info.url(), e);
+                let mut errors = errors.lock().unwrap();  // Lock the mutex
+                errors.push(format!("{}: {}", download_info.url(), e));
                 // delete the file if download fails
                 if download_info.dest.exists() {
                     std::fs::remove_file(download_info.dest).unwrap();
@@ -129,6 +132,12 @@ pub fn download_multiple_files(files: Vec<DownloadInfo>) -> Result<bool, Box<dyn
 
     for t in threads {
         t.join().unwrap();
+    }
+    let mut errs = vec![];
+    let errors = errors.lock().unwrap();
+    if !errors.is_empty() {
+        errs = errors.clone();
+        return Err(format!("{:?}", errs).into());
     }
     Ok(true)
 }

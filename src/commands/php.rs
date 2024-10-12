@@ -141,8 +141,11 @@ pub fn get_php_version(x: &Fli) {
             .to_str()
             .unwrap();
         let target_path = get_download_path("php", format!("php-{}.{}", version, extension).as_str());
+        if target_path.exists() {
+            println!("{} {}", "Version already downloaded".red(), version);
+            continue;
+        }
         to_download.push(DownloadInfo::new(download_url.clone(), target_path));
-        // success_table_data.push(vec![version.to_string(), download_url]);
     }
 
     if to_download.is_empty() {
@@ -151,8 +154,8 @@ pub fn get_php_version(x: &Fli) {
     }
     
     if let Err(e) = download_multiple_files(to_download) {
-        println!("❌ failed to download: {}", e);
-        return;
+        println!("❌ {}: {}", "Failed to download PHP versions".red(), e);
+        return;   
     }
     println!("✅ Downloaded PHP versions successfully");
     
