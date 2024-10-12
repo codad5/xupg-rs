@@ -1,7 +1,10 @@
 mod commands;
 mod helpers;
 
-use commands::{php::{get_php_version, install_php_version, list_php}, xampp::set_xampp_php};
+use commands::{
+    php::{get_php_version, handle_php_installation, list_php},
+    xampp::set_xampp_php,
+};
 use fli::Fli;
 
 //  a one general cli tool to update and manage version of all the tools in the system, like php, mysql, node,js versions in a system even when using node or xampp , laragon etc
@@ -21,7 +24,6 @@ fn main() {
 
     let mut xampp_app = app.command("xampp", "Manage xampp modules");
     setup_xampp_app(&mut xampp_app);
-
 
     // for default callback print help
     app.default(|x| {
@@ -55,7 +57,7 @@ fn setup_xampp_app(app: &mut Fli) {
     php_commnad.option(
         "-s --set, <>",
         "Set a specific version of php for xampp",
-        set_xampp_php
+        set_xampp_php,
     );
     php_commnad.option(
         "-g --get",
@@ -63,7 +65,7 @@ fn setup_xampp_app(app: &mut Fli) {
         |_x| {},
     );
     php_commnad.option(
-        "-p --path, <>",
+        "-p --path, []",
         "Specify the installation path of xampp",
         |_x| {},
     );
@@ -75,7 +77,7 @@ fn setup_install_app(app: &mut Fli) {
     app.option(
         "-p --php, <>",
         "Install a specific version of php",
-        install_php_version
+        handle_php_installation,
     );
     app.option(
         "-pa --path, <>",

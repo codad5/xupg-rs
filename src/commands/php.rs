@@ -3,9 +3,14 @@ use std::path::Path;
 use colored::*;
 
 use crate::helpers::{
-        api::{fetch_releases, ReleaseInfo}, file::{
-            download_multiple_files, get_download_dir, get_download_path, list_files_in_dir, unzip_file_with_progress, DownloadInfo
-        }, get_platform_os, package::{AppInstallError, Package, Version}, print_table
+    api::{fetch_releases, ReleaseInfo},
+    file::{
+        download_multiple_files, get_download_dir, get_download_path, list_files_in_dir,
+        unzip_file_with_progress, DownloadInfo,
+    },
+    get_platform_os,
+    package::{AppInstallError, Package, SupportedPackages, Version},
+    print_table,
 };
 use fli::Fli;
 
@@ -60,7 +65,7 @@ pub fn list_php(x: &Fli) {
         }
         false => {
             headers = vec!["Version", "Path", "Size"];
-            let table_data = get_local_php_version();
+            let table_data = get_local_php_versions();
             table_data
                 .iter()
                 .map(|version| {
@@ -157,13 +162,7 @@ pub fn get_php_version(x: &Fli) {
     println!("✅ Downloaded PHP versions successfully");
 }
 
-pub fn install_php_version(x: &Fli) {
-    let platform = get_platform_os();
-    if platform.is_none() {
-        x.print_help("Platform not supported");
-        return;
-    }
-    let _platform = platform.unwrap();
+pub fn handle_php_installation(x: &Fli) {
     let target_path = match x.get_values("path".to_owned()) {
         Ok(path) => path.first().unwrap().to_string(),
         Err(_) => {
@@ -183,32 +182,21 @@ pub fn install_php_version(x: &Fli) {
         version.bold().blue(),
         target_path.bold().blue()
     );
-    let mut php_app = Package::new("PHP".to_string());
-    let avaliable_versions = get_local_php_version();
-    php_app.add_versions(avaliable_versions);
-    if let Err(e) = php_app.install_version(&version, &target_path, true) {
-        match e {
-            AppInstallError::VersionNotAvailable => {
-                println!("{}", format!("❌ PHP version {} is not available", version.blue()).red());
-            }
-            AppInstallError::PathDoesNotExist => {
-                println!("{}", format!("❌ Path {} does not exist", target_path.blue()).red());
-            }
-            AppInstallError::UnavailableOffline => {
-                println!("{}", "❌ PHP version is not available offline".red());
-            }
-            AppInstallError::InstallFailed => {
-                println!("{}", "❌ Failed to install PHP version".red());
-            }
-        }
+    if let Err(e) = install_php_version(&version, &target_path) {
+        //color in grey or gray or light black
+        println!("❌ {}: {}", "Failed to install PHP version".red(), format!("{}", e).dimmed());
         return;
     }
     println!("✅ PHP version {} installed successfully", version);
-
-
 }
 
-pub fn get_local_php_version() -> Vec<Version> {
+pub fn install_php_version(version: &str, target_path: &str) -> Result<(), AppInstallError> {
+    let mut php_app = Package::new(SupportedPackages::PHP);
+    php_app.load_local_versions();
+    php_app.install_version(version, target_path, true)
+}
+
+pub fn get_local_php_versions() -> Vec<Version> {
     let php_zips = list_files_in_dir(&get_download_dir("php"));
     let mut table_data = Vec::new();
     for php_zip in php_zips {
@@ -222,7 +210,7 @@ pub fn get_local_php_version() -> Vec<Version> {
         table_data.push(Version::new_local(
             "PHP".to_string(),
             version.to_string(),
-            php_zip
+            php_zip,
         ));
     }
     table_data

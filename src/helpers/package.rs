@@ -1,12 +1,39 @@
-use std::{collections::HashMap, fmt::Display, path::{Path, PathBuf}};
+use std::{
+    collections::HashMap,
+    fmt::Display,
+    path::{Path, PathBuf},
+};
 
 use colored::Colorize;
 
+use crate::commands::php::get_local_php_versions;
+
 use super::file::{unzip_file, unzip_file_with_progress};
 
+pub enum SupportedPackages {
+    PHP,
+    MySQL,
+}
+
+impl SupportedPackages {
+    pub fn get_name(&self) -> &str {
+        match self {
+            SupportedPackages::PHP => "PHP",
+            SupportedPackages::MySQL => "MySQL",
+        }
+    }
+
+    pub fn get_local_versions(&self) -> Vec<Version> {
+        match self {
+            SupportedPackages::PHP => get_local_php_versions(),
+            _ => Vec::new(),
+        }
+    }
+}
+
 pub enum AppInstallError {
-    PathDoesNotExist,
-    VersionNotAvailable,
+    PathDoesNotExist(String),
+    VersionNotAvailable(String),
     UnavailableOffline,
     InstallFailed,
 }
@@ -14,16 +41,25 @@ pub enum AppInstallError {
 impl Display for AppInstallError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AppInstallError::PathDoesNotExist => write!(f, "{}", "Path does not exist".red()),
-            AppInstallError::VersionNotAvailable => write!(f, "{}", "Version not available".red()),
-            AppInstallError::UnavailableOffline => write!(f, "{}", "Version is not available offline".red()),
-            AppInstallError::InstallFailed => write!(f, "{}", "Installation failed".red()),
+            AppInstallError::PathDoesNotExist(path) => {
+                write!(f, "{}", format!("Path {} does not exist", path))
+            }
+            AppInstallError::VersionNotAvailable(version) => {
+                write!(f, "{}", format!("Version {} is not available", version))
+            }
+            AppInstallError::UnavailableOffline => {
+                write!(f, "{}", "Version is not available offline")
+            }
+            AppInstallError::InstallFailed => write!(f, "{}", "Installation failed"),
         }
     }
 }
 
+
+
+
 pub struct Package {
-    pub name: String,
+    pub name: SupportedPackages,
     pub versions: HashMap<String, Version>,
 }
 
@@ -36,7 +72,7 @@ pub struct Version {
 }
 
 impl Package {
-    pub fn new(name: String) -> Self {
+    pub fn new(name: SupportedPackages) -> Self {
         Package {
             name,
             versions: HashMap::new(),
@@ -44,7 +80,7 @@ impl Package {
     }
 
     pub fn get_name(&self) -> &str {
-        &self.name
+        &self.name.get_name()
     }
 
     pub fn add_version(&mut self, version: Version) {
@@ -56,6 +92,11 @@ impl Package {
         for version in versions {
             self.add_version(version);
         }
+    }
+
+    pub fn load_local_versions(&mut self) {
+        let versions = self.name.get_local_versions();
+        self.add_versions(versions);
     }
 
     pub fn get_version(&self, version: &str) -> Option<&Version> {
@@ -129,28 +170,32 @@ impl Version {
 }
 
 impl Package {
-    pub fn install_version(&self, version: &str, target_path: &str, with_pb: bool) -> Result<(), AppInstallError> {
+    pub fn install_version(
+        &self,
+        version: &str,
+        target_path: &str,
+        with_pb: bool,
+    ) -> Result<(), AppInstallError> {
         // check if version is available
         if !self.has_version(&version) {
-            return Err(AppInstallError::VersionNotAvailable);
+            return Err(AppInstallError::VersionNotAvailable(version.to_string()));
         }
         // check if path exists
         let install_path = Path::new(&target_path);
         if !install_path.exists() {
-            return Err(AppInstallError::PathDoesNotExist);
+            return Err(AppInstallError::PathDoesNotExist(target_path.to_string()));
         }
         let version_info = self.get_version(&version).unwrap();
         if !version_info.is_offline() {
             return Err(AppInstallError::UnavailableOffline);
         }
         let file: &str = version_info.get_location();
-        let file  = Path::new(file);
+        let file = Path::new(file);
         if with_pb {
             if let Err(e) = unzip_file_with_progress(file, install_path) {
                 return Err(AppInstallError::InstallFailed);
             }
-        }
-        else {
+        } else {
             if let Err(e) = unzip_file(file, install_path) {
                 return Err(AppInstallError::InstallFailed);
             }
