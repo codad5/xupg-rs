@@ -5,7 +5,7 @@ use colored::*;
 use crate::helpers::{
         api::{fetch_releases, ReleaseInfo}, file::{
             download_multiple_files, get_download_dir, get_download_path, list_files_in_dir, unzip_file_with_progress, DownloadInfo
-        }, get_platform_os, package::{Package, Version}, print_table
+        }, get_platform_os, package::{AppInstallError, Package, Version}, print_table
 };
 use fli::Fli;
 
@@ -179,38 +179,31 @@ pub fn install_php_version(x: &Fli) {
         }
     };
     println!(
-        "Installing PHP version {} to path {}",
+        "Attempting to install PHP version {} to {}",
         version.bold().blue(),
         target_path.bold().blue()
     );
     let mut php_app = Package::new("PHP".to_string());
     let avaliable_versions = get_local_php_version();
     php_app.add_versions(avaliable_versions);
-    // check if version is available
-    if !php_app.has_version(&version) {
-        println!("{} {}", "Version not available".red(), version);
-        println!("{} {}", "Please use the get command to download the version".yellow(), format!("fli get -p {}", version).green());
+    if let Err(e) = php_app.install_version(&version, &target_path, true) {
+        match e {
+            AppInstallError::VersionNotAvailable => {
+                println!("{}", format!("❌ PHP version {} is not available", version.blue()).red());
+            }
+            AppInstallError::PathDoesNotExist => {
+                println!("{}", format!("❌ Path {} does not exist", target_path.blue()).red());
+            }
+            AppInstallError::UnavailableOffline => {
+                println!("{}", "❌ PHP version is not available offline".red());
+            }
+            AppInstallError::InstallFailed => {
+                println!("{}", "❌ Failed to install PHP version".red());
+            }
+        }
         return;
     }
-    // check if path exists
-    let install_path = Path::new(&target_path);
-    if !install_path.exists() {
-        println!("{} {}", "Path does not exist".red(), install_path.display());
-        return;
-    }
-    let version_info = php_app.get_version(&version).unwrap();
-    if !version_info.is_offline() {
-        println!("{} {}", "Version is offline".red(), version);
-        println!("{} {}", "Please use the get command to download the version".yellow(), format!("fli get -p {}", version).green());
-        return;
-    }
-    let file: &str = version_info.get_location();
-    let file  = Path::new(file);
-    if let Err(e) = unzip_file_with_progress(file, install_path) {
-        println!("{} {}", "Failed to install PHP version".red(), e);
-        return;
-    }
-    println!("✅ Installed PHP version {} successfully", version);
+    println!("✅ PHP version {} installed successfully", version);
 
 
 }
@@ -221,8 +214,6 @@ pub fn get_local_php_version() -> Vec<Version> {
     for php_zip in php_zips {
         let extension = php_zip.extension().unwrap().to_str().unwrap();
         let file_name = php_zip.file_name().unwrap().to_str().unwrap();
-        let file_size = php_zip.metadata().unwrap().len();
-        let file_size = file_size / 1024 / 1024;
         let version = file_name.split("-").nth(1).unwrap();
         // remove the extension
         let version = version.replace(&format!(".{}", extension), "");

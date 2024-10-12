@@ -1,4 +1,26 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, fmt::Display, path::{Path, PathBuf}};
+
+use colored::Colorize;
+
+use super::file::{unzip_file, unzip_file_with_progress};
+
+pub enum AppInstallError {
+    PathDoesNotExist,
+    VersionNotAvailable,
+    UnavailableOffline,
+    InstallFailed,
+}
+
+impl Display for AppInstallError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AppInstallError::PathDoesNotExist => write!(f, "{}", "Path does not exist".red()),
+            AppInstallError::VersionNotAvailable => write!(f, "{}", "Version not available".red()),
+            AppInstallError::UnavailableOffline => write!(f, "{}", "Version is not available offline".red()),
+            AppInstallError::InstallFailed => write!(f, "{}", "Installation failed".red()),
+        }
+    }
+}
 
 pub struct Package {
     pub name: String,
@@ -19,6 +41,10 @@ impl Package {
             name,
             versions: HashMap::new(),
         }
+    }
+
+    pub fn get_name(&self) -> &str {
+        &self.name
     }
 
     pub fn add_version(&mut self, version: Version) {
@@ -99,5 +125,36 @@ impl Version {
 
     pub fn is_offline(&self) -> bool {
         self.offline
+    }
+}
+
+impl Package {
+    pub fn install_version(&self, version: &str, target_path: &str, with_pb: bool) -> Result<(), AppInstallError> {
+        // check if version is available
+        if !self.has_version(&version) {
+            return Err(AppInstallError::VersionNotAvailable);
+        }
+        // check if path exists
+        let install_path = Path::new(&target_path);
+        if !install_path.exists() {
+            return Err(AppInstallError::PathDoesNotExist);
+        }
+        let version_info = self.get_version(&version).unwrap();
+        if !version_info.is_offline() {
+            return Err(AppInstallError::UnavailableOffline);
+        }
+        let file: &str = version_info.get_location();
+        let file  = Path::new(file);
+        if with_pb {
+            if let Err(e) = unzip_file_with_progress(file, install_path) {
+                return Err(AppInstallError::InstallFailed);
+            }
+        }
+        else {
+            if let Err(e) = unzip_file(file, install_path) {
+                return Err(AppInstallError::InstallFailed);
+            }
+        }
+        Ok(())
     }
 }
