@@ -206,5 +206,3 @@ This project is licensed under the **MIT License**. See the `LICENSE` file for m
 With **xupg-rs**, managing versions across environments becomes straightforward and efficient. Install it today and simplify your workflow! 🚀
 
 ---
-
-This version now reflects the **best practices** for installing the project, including both building from source and using `cargo install` efficiently. Thanks for the great idea!
