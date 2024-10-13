@@ -25,11 +25,6 @@ fn main() {
     let mut xampp_app = app.command("xampp", "Manage xampp modules");
     setup_xampp_app(&mut xampp_app);
 
-    // for default callback print help
-    app.default(|x| {
-        x.print_help("Please provide a valid command");
-    });
-
     app.run();
 }
 

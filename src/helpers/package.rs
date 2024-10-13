@@ -34,7 +34,7 @@ impl SupportedPackages {
 pub enum AppInstallError {
     PathDoesNotExist(String),
     VersionNotAvailable(String),
-    UnavailableOffline,
+    UnAvailableOffline,
     InstallFailed,
 }
 
@@ -47,7 +47,7 @@ impl Display for AppInstallError {
             AppInstallError::VersionNotAvailable(version) => {
                 write!(f, "{}", format!("Version {} is not available", version))
             }
-            AppInstallError::UnavailableOffline => {
+            AppInstallError::UnAvailableOffline => {
                 write!(f, "{}", "Version is not available offline")
             }
             AppInstallError::InstallFailed => write!(f, "{}", "Installation failed"),
@@ -187,7 +187,7 @@ impl Package {
         }
         let version_info = self.get_version(&version).unwrap();
         if !version_info.is_offline() {
-            return Err(AppInstallError::UnavailableOffline);
+            return Err(AppInstallError::UnAvailableOffline);
         }
         let file: &str = version_info.get_location();
         let file = Path::new(file);
