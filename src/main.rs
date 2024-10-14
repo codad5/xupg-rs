@@ -4,11 +4,11 @@ mod helpers;
 use commands::{
     list_app, php::{get_php_version, handle_php_installation}, xampp::set_xampp_php
 };
-use fli::Fli;
+use fli::{Fli, init_fli_from_toml};
 
 //  a one general cli tool to update and manage version of all the tools in the system, like php, mysql, node,js versions in a system even when using node or xampp , laragon etc
 fn main() {
-    let mut app = Fli::init_from_toml();
+    let mut app = init_fli_from_toml!();
 
     // A command to list all available versions of tools
     let mut list_app = app.command("list", "List all available versions of tools");
