@@ -4,7 +4,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use colored::Colorize;
 
 use crate::commands::php::get_local_php_versions;
 
@@ -203,11 +202,11 @@ impl Package {
         let file: &str = version_info.get_location();
         let file = Path::new(file);
         if with_pb {
-            if let Err(e) = unzip_file_with_progress(file, install_path) {
+            if let Err(_) = unzip_file_with_progress(file, install_path) {
                 return Err(AppInstallError::InstallFailed);
             }
         } else {
-            if let Err(e) = unzip_file(file, install_path) {
+            if let Err(_) = unzip_file(file, install_path) {
                 return Err(AppInstallError::InstallFailed);
             }
         }

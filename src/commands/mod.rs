@@ -1,9 +1,9 @@
-use std::{env, path::Path};
+use std::path::Path;
 
 use colored::Colorize;
 use fli::Fli;
 
-use crate::helpers::{api::{fetch_releases, ReleaseInfo}, file::{download_multiple_files, get_download_path, DownloadInfo}, get_platform_os, package::{Package, SupportedPackages}, print_table};
+use crate::helpers::{api::{fetch_releases, ReleaseInfo}, file::{download_multiple_files, get_download_path, DownloadInfo}, get_platform_os, package::SupportedPackages, print_table};
 
 
 pub mod php;
@@ -127,7 +127,6 @@ pub fn get_app(package : &SupportedPackages,  versions : Vec<String>) -> Result<
 
 
 pub fn list_app(x: &Fli) {
-    let ff = env!("CARGO_PKG_VERSION");
     for package in SupportedPackages::iter() {
         if x.is_passed(package.get_name().to_lowercase()) {
             let result = get_app_list(&package, x.is_passed("online".to_owned()));

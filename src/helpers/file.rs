@@ -3,7 +3,6 @@ use std::{fs::{create_dir_all, File}, io::{Read, Write}, path::{Path, PathBuf}, 
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 
 use reqwest::blocking::ClientBuilder;
-use serde_json::error;
 
 
 
