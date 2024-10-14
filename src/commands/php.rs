@@ -3,90 +3,16 @@ use std::path::Path;
 use colored::*;
 
 use crate::helpers::{
-    api::{fetch_releases, ReleaseInfo},
+    api::fetch_releases,
     file::{
         download_multiple_files, get_download_dir, get_download_path, list_files_in_dir,
-        unzip_file_with_progress, DownloadInfo,
+        DownloadInfo,
     },
     get_platform_os,
     package::{AppInstallError, Package, SupportedPackages, Version},
-    print_table,
 };
 use fli::Fli;
 
-
-pub fn get_php_version(x: &Fli) {
-    let platform = get_platform_os();
-    if platform.is_none() {
-        x.print_help("Platform not supported");
-        return;
-    }
-    let platform = platform.unwrap();
-
-    let versions = x.get_values("php".to_owned());
-    if versions.is_err() {
-        x.print_help("Please provide a version");
-        return;
-    }
-    let versions = versions.unwrap();
-    let app_data = fetch_releases();
-
-    if app_data.is_err() {
-        x.print_help("Failed to fetch data");
-        return;
-    }
-    let app_data = app_data.unwrap();
-    let platform_tools = app_data.platforms.get(&platform);
-    if platform_tools.is_none() {
-        x.print_help("Platform not supported");
-        return;
-    }
-
-    let platform_tools = platform_tools.unwrap();
-    let php = platform_tools.tools.get("php");
-
-    if php.is_none() {
-        x.print_help("PHP not available for this platform");
-        return;
-    }
-
-    let php = php.unwrap();
-    let mut to_download = Vec::new();
-    // let mut success_table_data = Vec::new();
-    for version in versions {
-        let version_info = php.versions.get(&version);
-        if version_info.is_none() {
-            println!("{} {}", "Version not available".red(), version);
-            break;
-        }
-        let version_info = version_info.unwrap();
-
-        let download_url = version_info.url.clone();
-        let extension = Path::new(&download_url)
-            .extension()
-            .unwrap()
-            .to_str()
-            .unwrap();
-        let target_path =
-            get_download_path("php", format!("php-{}.{}", version, extension).as_str());
-        if target_path.exists() {
-            println!("{} {}", "Version already downloaded".red(), version);
-            continue;
-        }
-        to_download.push(DownloadInfo::new(download_url.clone(), target_path));
-    }
-
-    if to_download.is_empty() {
-        println!("❌ No PHP versions to download");
-        return;
-    }
-
-    if let Err(e) = download_multiple_files(to_download) {
-        println!("❌ {}: {}", "Failed to download PHP versions".red(), e);
-        return;
-    }
-    println!("✅ Downloaded PHP versions successfully");
-}
 
 pub fn handle_php_installation(x: &Fli) {
     let target_path = match x.get_values("path".to_owned()) {

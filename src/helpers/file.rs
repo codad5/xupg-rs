@@ -133,10 +133,9 @@ pub fn download_multiple_files(files: Vec<DownloadInfo>) -> Result<bool, Box<dyn
     for t in threads {
         t.join().unwrap();
     }
-    let mut errs = vec![];
     let errors = errors.lock().unwrap();
     if !errors.is_empty() {
-        errs = errors.clone();
+        let errs = errors.clone();
         return Err(format!("{:?}", errs).into());
     }
     Ok(true)

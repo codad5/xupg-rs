@@ -2,7 +2,7 @@ mod commands;
 mod helpers;
 
 use commands::{
-    list_app, php::{get_php_version, handle_php_installation}, xampp::set_xampp_php
+    download_app, list_app, php::{get_php_version, handle_php_installation}, xampp::set_xampp_php
 };
 use fli::{Fli, init_fli_from_toml};
 
@@ -43,7 +43,12 @@ fn setup_get_app(app: &mut Fli) {
     app.option(
         "-p --php, <...>",
         "Get a specific version of php",
-        get_php_version,
+        download_app,
+    );
+    app.option(
+        "-pm --phpmyadmin, <...>",
+        "Get a specific version of phpmyadmin",
+        download_app,
     );
     app.allow_duplicate_callback(false);
 }

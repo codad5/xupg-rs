@@ -1,7 +1,9 @@
+use std::{env, path::Path};
+
 use colored::Colorize;
 use fli::Fli;
 
-use crate::helpers::{api::{fetch_releases, ReleaseInfo}, get_platform_os, package::{Package, SupportedPackages}, print_table};
+use crate::helpers::{api::{fetch_releases, ReleaseInfo}, file::{download_multiple_files, get_download_path, DownloadInfo}, get_platform_os, package::{Package, SupportedPackages}, print_table};
 
 
 pub mod php;
@@ -67,19 +69,65 @@ pub fn get_app_list(package : &SupportedPackages, online: bool) -> Result<([Stri
             table_data
         }
     };
-
-    // Now proceed to use the table_data to display the table
-
-    // println!(
-    //     "\n{} {}: \n",
-    //     "Available PHP versions for".red(),
-    //     platform.to_uppercase().bold().blue()
-    // );
     return Ok((headers, table_data));
 }
 
 
+pub fn get_app(package : &SupportedPackages,  versions : Vec<String>) -> Result<bool, String> {
+    let platform = get_platform_os();
+    if platform.is_none() {
+        return Err("Platform not supported".to_string());
+    }
+    let platform = platform.unwrap();
+    let app_data = fetch_releases();
+    if app_data.is_err() {
+        return Err("Failed to fetch data".to_string());
+    }
+
+    let app_data = app_data.unwrap();
+    let platform_tools = app_data.platforms.get(&platform);
+    if platform_tools.is_none() {
+        return Err("Platform not supported".to_string());
+    }
+    let platform_tools = platform_tools.unwrap();
+    let package_name = package.get_name();
+    let package_name = package_name.to_lowercase();
+    let apppackage = platform_tools.tools.get(&package_name);
+    if !apppackage.is_some() {
+        return Err(format!("{} not available for this platform", package_name.to_uppercase().bold().blue()));
+    }
+    let apppackage = apppackage.unwrap();
+    let mut to_download = Vec::new();
+    for version in versions {
+        let version_info = apppackage.versions.get(&version);
+        if version_info.is_none() {
+            return Err(format!("{} {}", "Version not available".red(), version));
+        }
+        let version_info = version_info.unwrap();
+        let download_url = version_info.url.clone();
+        let extension = Path::new(&download_url)
+            .extension()
+            .unwrap()
+            .to_str()
+            .unwrap();
+        let target_path = get_download_path(&package_name, format!("{}-{}.{}", package_name, version, extension).as_str());
+        if target_path.exists() {
+            return Err(format!("{} {}", "File already exists".red(), target_path.display()));
+        }
+        to_download.push(DownloadInfo::new(download_url.clone(), target_path));
+    }
+    if to_download.is_empty() {
+        return Err("No files to download".to_string());
+    }
+    if let Err(e) = download_multiple_files(to_download) {
+        return Err(format!("{} {}", "Failed to download files".red(), e));
+    }
+    return Ok(true);
+}
+
+
 pub fn list_app(x: &Fli) {
+    let ff = env!("CARGO_PKG_VERSION");
     for package in SupportedPackages::iter() {
         if x.is_passed(package.get_name().to_lowercase()) {
             let result = get_app_list(&package, x.is_passed("online".to_owned()));
@@ -93,5 +141,27 @@ pub fn list_app(x: &Fli) {
                 }
             }
         }
+    }
+}
+
+pub fn download_app(x: &Fli) {
+    for package in SupportedPackages::iter() {
+        if !x.is_passed(package.get_name().to_lowercase()) {
+            continue;
+        }
+        let versions = x.get_values(package.get_name().to_lowercase());
+        if versions.is_err() {
+            x.print_help("Please provide a version to install");
+            return;
+        }
+        let versions = versions.unwrap();
+        if versions.is_empty() {
+            x.print_help("Please provide a version to install");
+            return;
+        }
+        if let Err(e) = get_app(&package, versions) {
+            x.print_help(&e);
+        }
+        println!("✅ Installed {} versions successfully", package.get_name().to_uppercase().bold().blue());
     }
 }
