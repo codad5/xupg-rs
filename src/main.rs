@@ -2,7 +2,7 @@ mod commands;
 mod helpers;
 
 use commands::{
-    download_app, list_app, php::{get_php_version, handle_php_installation}, xampp::set_xampp_php
+    download_app, list_app, php::handle_php_installation, xampp::set_xampp_php
 };
 use fli::{Fli, init_fli_from_toml};
 

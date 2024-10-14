@@ -1,14 +1,10 @@
-use std::path::Path;
 
 use colored::*;
 
 use crate::helpers::{
-    api::fetch_releases,
     file::{
-        download_multiple_files, get_download_dir, get_download_path, list_files_in_dir,
-        DownloadInfo,
+        get_download_dir, list_files_in_dir,
     },
-    get_platform_os,
     package::{AppInstallError, Package, SupportedPackages, Version},
 };
 use fli::Fli;
