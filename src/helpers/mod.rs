@@ -19,25 +19,21 @@ pub fn get_platform_os() -> Option<String> {
 
 
 
-pub fn print_table<T>(header: Vec<&str>, data: Vec<Vec<T>>)
+pub fn print_table<T, const N: usize>(header: [String; N], data: &[[T; N]])
 where
     T: Display,
 {
     // Calculate the width of each column based on the longest item in each column
-    let col_widths: Vec<usize> = header
-        .iter()
-        .enumerate()
-        .map(|(i, &col_name)| {
-            let max_data_width = data.iter().map(|row| row[i].to_string().len()).max().unwrap_or(0);
-            std::cmp::max(max_data_width, col_name.len())
-        })
-        .collect();
+    let col_widths: [usize; N] = std::array::from_fn(|i| {
+        let max_data_width = data.iter().map(|row| row[i].to_string().len()).max().unwrap_or(0);
+        std::cmp::max(max_data_width, header[i].len())
+    });
 
     // Print the header with appropriate spacing and color
     let header_line: String = header
         .iter()
         .enumerate()
-        .map(|(i, &col_name)| format!("{:^width$}", col_name.bold().cyan(), width = col_widths[i]))
+        .map(|(i, col_name)| format!("{:^width$}", col_name.bold().cyan(), width = col_widths[i]))
         .collect::<Vec<String>>()
         .join(" | ");
     println!("{}", header_line);
@@ -54,6 +50,3 @@ where
         println!("{}", row_line);
     }
 }
-
-
-

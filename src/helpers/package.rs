@@ -13,6 +13,7 @@ use super::file::{unzip_file, unzip_file_with_progress};
 pub enum SupportedPackages {
     PHP,
     MySQL,
+    PHPMyAdmin,
 }
 
 impl SupportedPackages {
@@ -20,6 +21,7 @@ impl SupportedPackages {
         match self {
             SupportedPackages::PHP => "PHP",
             SupportedPackages::MySQL => "MySQL",
+            SupportedPackages::PHPMyAdmin => "PHPMyAdmin"
         }
     }
 
@@ -28,6 +30,15 @@ impl SupportedPackages {
             SupportedPackages::PHP => get_local_php_versions(),
             _ => Vec::new(),
         }
+    }
+
+    //  return a vector of supported packages
+    pub fn iter() -> Vec<SupportedPackages> {
+        vec![
+            SupportedPackages::PHP,
+            SupportedPackages::MySQL,
+            SupportedPackages::PHPMyAdmin,
+        ]
     }
 }
 

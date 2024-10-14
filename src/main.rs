@@ -2,8 +2,7 @@ mod commands;
 mod helpers;
 
 use commands::{
-    php::{get_php_version, handle_php_installation, list_php},
-    xampp::set_xampp_php,
+    list_app, php::{get_php_version, handle_php_installation}, xampp::set_xampp_php
 };
 use fli::Fli;
 
@@ -32,8 +31,10 @@ fn setup_list_app(app: &mut Fli) {
     app.option(
         "-p --php",
         "List version of all avaiable php versions",
-        list_php,
+        list_app,
     );
+    // for phpmyadmin
+    app.option("-pm --phpmyadmin", "List version of all avaiable phpmyadmin versions",list_app);
     app.option("-o --online", "Get all online", |_x| {});
     app.allow_duplicate_callback(false);
 }
