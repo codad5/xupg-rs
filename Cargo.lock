@@ -454,9 +454,9 @@ dependencies = [
 
 [[package]]
 name = "fli"
-version = "0.0.8"
+version = "0.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "678fa362a169416b8b392443b8ec98bf7b6beb81d67e0147514874531c6796a7"
+checksum = "4a6c1f92bebcd6ead0ad9a65224b3657367cceb840d0b1953fdf386b415727d8"
 dependencies = [
  "colored",
 ]
