@@ -5,9 +5,8 @@ use std::{
 };
 
 
-use crate::commands::php::get_local_php_versions;
 
-use super::file::{unzip_file, unzip_file_with_progress};
+use super::file::{get_download_dir, list_files_in_dir, unzip_file, unzip_file_with_progress};
 
 pub enum SupportedPackages {
     PHP,
@@ -25,11 +24,25 @@ impl SupportedPackages {
     }
 
     pub fn get_local_versions(&self) -> Vec<Version> {
-        match self {
-            SupportedPackages::PHP => get_local_php_versions(),
-            _ => Vec::new(),
-        }
+    let php_zips = list_files_in_dir(&get_download_dir(self.get_name().to_lowercase().as_str()));
+    let mut table_data = Vec::new();
+    for php_zip in php_zips {
+        let extension = php_zip.extension().unwrap().to_str().unwrap();
+        let file_name = php_zip.file_name().unwrap().to_str().unwrap();
+        let version = file_name.split("-").nth(1).unwrap();
+        // remove the extension
+        let version = version.replace(&format!(".{}", extension), "");
+        // table_data.push(vec![version.to_string(), php_zip.display().to_string(), format!("{} MB", file_size)]);
+        //from path buf to path
+        table_data.push(Version::new_local(
+            "PHP".to_string(),
+            version.to_string(),
+            php_zip,
+        ));
     }
+    table_data
+}
+
 
     //  return a vector of supported packages
     pub fn iter() -> Vec<SupportedPackages> {
